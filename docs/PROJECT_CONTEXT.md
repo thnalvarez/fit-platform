@@ -103,3 +103,16 @@ Esses recursos não fazem parte do primeiro desenvolvimento imediato do core.
 - Respostas sobre dor, lesões, limitações, sinais de atenção e gestação devem ser usadas somente para segurança e personalização do programa.
 - Esses dados não devem ser enviados para analytics, incluídos em logs ou exibidos fora das áreas em que forem necessários.
 - A triagem não realiza diagnóstico, não substitui avaliação profissional e não deve afirmar aptidão clínica para exercício.
+
+## Estado de continuidade — agosto de 2026
+
+- As Etapas 1–8 do onboarding estão implementadas.
+- A Etapa 9 está implementada em UI e normalização de payload; sua persistência é o próximo trabalho funcional.
+- A migration 007 foi executada manualmente no Supabase.
+- As migrations 001–007 não estão versionadas neste repositório. Existing Supabase migrations were historically executed manually and must be reconstructed/versioned through a dedicated verified database-baseline task.
+- A auditoria de segurança está em andamento.
+- RLS foi confirmada em `profiles` e `body_measurements`, e as policies dessas tabelas foram auditadas.
+- O teste adversarial de isolamento entre usuários A e B foi implementado em `scripts/security/test-user-isolation.mjs`.
+- O teste A x B ainda não foi concluído porque o fluxo de confirmação de email precisa ser resolvido.
+- O próximo passo de segurança é corrigir ou projetar corretamente a confirmação de email e então executar novamente o teste de isolamento.
+- Credenciais dos usuários de teste devem permanecer somente em arquivos locais ignorados e nunca ser armazenadas no repositório.

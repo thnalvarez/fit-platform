@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { router } from "expo-router";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { OnboardingHeader } from "../../components/onboarding/OnboardingHeader";
@@ -218,6 +219,10 @@ export default function LimitationsScreen() {
               message="Seu programa deverá considerar cuidados específicos para essa fase."
             />
           ) : null}
+          <Button
+            title="Continuar"
+            onPress={() => router.push("/(onboarding)/measurements")}
+          />
         </View>
       </SafeAreaView>
     );

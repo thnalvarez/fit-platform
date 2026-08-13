@@ -43,3 +43,6 @@ example
 /android
 
 .env.local
+
+# Local security test credentials
+security-test.env

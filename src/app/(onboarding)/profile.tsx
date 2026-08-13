@@ -123,6 +123,16 @@ export default function Onboarding() {
     }
   }
 
+  function parsePickerNumber(value: number | string) {
+    if (value === "") {
+      return null;
+    }
+
+    const numericValue = Number(value);
+
+    return Number.isFinite(numericValue) ? numericValue : null;
+  }
+
   async function handleContinue() {
     if (loading) return;
 
@@ -370,11 +380,13 @@ export default function Onboarding() {
           <View style={styles.pickerRow}>
             <View style={styles.pickerBox}>
               <Picker
-                selectedValue={heightMeters}
-                onValueChange={(value) => setHeightMeters(Number(value))}
+                selectedValue={heightMeters ?? ""}
+                onValueChange={(value) =>
+                  setHeightMeters(parsePickerNumber(value))
+                }
                 style={styles.picker}
               >
-                <Picker.Item label="Metros" value={null} />
+                <Picker.Item label="Selecione os metros" value="" />
                 <Picker.Item label="1 m" value={1} />
 
                 <Picker.Item label="2 m" value={2} />
@@ -383,11 +395,13 @@ export default function Onboarding() {
 
             <View style={styles.pickerBox}>
               <Picker
-                selectedValue={heightCentimeters}
-                onValueChange={(value) => setHeightCentimeters(Number(value))}
+                selectedValue={heightCentimeters ?? ""}
+                onValueChange={(value) =>
+                  setHeightCentimeters(parsePickerNumber(value))
+                }
                 style={styles.picker}
               >
-                <Picker.Item label="Centímetros" value={null} />
+                <Picker.Item label="Selecione os centímetros" value="" />
                 {Array.from({ length: 100 }, (_, value) => (
                   <Picker.Item
                     key={value}
@@ -411,11 +425,11 @@ export default function Onboarding() {
 
           <View style={styles.pickerBox}>
             <Picker
-              selectedValue={weightKg}
-              onValueChange={(value) => setWeightKg(Number(value))}
+              selectedValue={weightKg ?? ""}
+              onValueChange={(value) => setWeightKg(parsePickerNumber(value))}
               style={styles.picker}
             >
-              <Picker.Item label="Selecionar peso" value={null} />
+              <Picker.Item label="Selecione o peso" value="" />
               {Array.from({ length: 271 }, (_, index) => {
                 const value = index + 30;
 

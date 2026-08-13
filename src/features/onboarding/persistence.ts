@@ -1,4 +1,5 @@
 import { supabase } from "../../services/supabase";
+import { BodyMeasurementInsert } from "./measurements";
 import {
   BiologicalSex,
   ExperienceProfileUpdate,
@@ -110,4 +111,43 @@ export function savePreferences(values: PreferencesProfileUpdate) {
 
 export function saveLimitations(values: LimitationsProfileUpdate) {
   return updateAuthenticatedProfile(values, "limitations");
+}
+
+export async function saveBodyMeasurement(values: BodyMeasurementInsert) {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    if (userError) {
+      console.error(
+        "[ONBOARDING] body measurements: failed to get user",
+        userError,
+      );
+    }
+    throw new Error(
+      "Não foi possível identificar sua conta. Entre novamente e tente de novo.",
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("body_measurements")
+    .insert({ user_id: user.id, ...values })
+    .select("id");
+
+  if (error) {
+    console.error("[ONBOARDING] body measurements: insert failed", error);
+    throw new Error("Não foi possível registrar suas medidas. Tente novamente.");
+  }
+
+  if (!data || data.length !== 1) {
+    console.error(
+      "[ONBOARDING] body measurements: unexpected returned row count",
+      { returnedRows: data?.length ?? 0 },
+    );
+    throw new Error("Não foi possível confirmar o registro das medidas.");
+  }
+
+  return data[0].id as string;
 }

@@ -226,3 +226,39 @@ export type LimitationsProfileUpdate = {
   safety_clearance_required: boolean;
   requires_special_population_programming: boolean;
 };
+
+export type SleepDurationRange =
+  | "less_than_5"
+  | "5_to_6"
+  | "6_to_7"
+  | "7_to_8"
+  | "8_to_9"
+  | "more_than_9";
+
+export type SleepQuality = "very_poor" | "poor" | "fair" | "good" | "very_good";
+
+export type SleepRegularity = "regular" | "somewhat_variable" | "very_variable";
+
+export type PerceivedStress = "low" | "moderate" | "high" | "very_high";
+
+export type PerceivedRecovery = "poor" | "fair" | "good" | "very_good";
+
+export type DailyEnergyLevel =
+  | "very_low"
+  | "low"
+  | "normal"
+  | "high"
+  | "very_high";
+
+export type ScheduleVariability = "most_weeks" | "sometimes" | "rarely";
+
+export type RecoveryProfileUpdate = {
+  sleep_duration_range: SleepDurationRange;
+  sleep_quality: SleepQuality;
+  sleep_regularity: SleepRegularity;
+  perceived_stress: PerceivedStress;
+  perceived_recovery: PerceivedRecovery;
+  daily_energy_level: DailyEnergyLevel;
+  has_variable_schedule: boolean;
+  schedule_variability: ScheduleVariability | null;
+};

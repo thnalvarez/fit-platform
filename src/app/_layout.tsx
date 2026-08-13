@@ -32,6 +32,14 @@ export default function RootLayout() {
         name="(onboarding)/limitations"
         options={{ title: "Limitações e cuidados" }}
       />
+      <Stack.Screen
+        name="(onboarding)/measurements"
+        options={{ title: "Medidas corporais" }}
+      />
+      <Stack.Screen
+        name="(onboarding)/recovery"
+        options={{ title: "Hábitos e recuperação" }}
+      />
     </Stack>
   );
 }

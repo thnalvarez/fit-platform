@@ -4,6 +4,7 @@ import {
   BodyRegion,
   ConsistentTrainingExperience,
   DailyPhysicalDemand,
+  DailyEnergyLevel,
   DetailedMusclePriority,
   Equipment,
   ExerciseWarningSign,
@@ -15,9 +16,15 @@ import {
   PrimaryGoal,
   ProgramManagement,
   PregnancyStatus,
+  PerceivedRecovery,
+  PerceivedStress,
   RecentTrainingInterruption,
   ScheduleType,
+  ScheduleVariability,
   SecondaryGoal,
+  SleepDurationRange,
+  SleepQuality,
+  SleepRegularity,
   TechnicalFamiliarity,
   TrainingLocation,
   Weekday,
@@ -286,4 +293,61 @@ export const pregnancyStatusOptions: OnboardingOption<PregnancyStatus>[] = [
   { label: "Tive parto recentemente", value: "recent_postpartum" },
   { label: "Não", value: "no" },
   { label: "Prefiro não informar", value: "prefer_not_to_say" },
+];
+
+export const sleepDurationRangeOptions: OnboardingOption<SleepDurationRange>[] = [
+  { label: "Menos de 5 horas", value: "less_than_5" },
+  { label: "5 a 6 horas", value: "5_to_6" },
+  { label: "6 a 7 horas", value: "6_to_7" },
+  { label: "7 a 8 horas", value: "7_to_8" },
+  { label: "8 a 9 horas", value: "8_to_9" },
+  { label: "Mais de 9 horas", value: "more_than_9" },
+];
+
+export const sleepQualityOptions: OnboardingOption<SleepQuality>[] = [
+  { label: "Muito ruim", value: "very_poor" },
+  { label: "Ruim", value: "poor" },
+  { label: "Razoável", value: "fair" },
+  { label: "Boa", value: "good" },
+  { label: "Muito boa", value: "very_good" },
+];
+
+export const sleepRegularityOptions: OnboardingOption<SleepRegularity>[] = [
+  {
+    label: "Sim, geralmente durmo e acordo em horários parecidos",
+    value: "regular",
+  },
+  { label: "Variam um pouco", value: "somewhat_variable" },
+  {
+    label: "Mudam bastante ao longo da semana",
+    value: "very_variable",
+  },
+];
+
+export const perceivedStressOptions: OnboardingOption<PerceivedStress>[] = [
+  { label: "Baixo", value: "low" },
+  { label: "Moderado", value: "moderate" },
+  { label: "Alto", value: "high" },
+  { label: "Muito alto", value: "very_high" },
+];
+
+export const perceivedRecoveryOptions: OnboardingOption<PerceivedRecovery>[] = [
+  { label: "Pouco recuperado", value: "poor" },
+  { label: "Mais ou menos", value: "fair" },
+  { label: "Bem recuperado", value: "good" },
+  { label: "Muito bem recuperado", value: "very_good" },
+];
+
+export const dailyEnergyLevelOptions: OnboardingOption<DailyEnergyLevel>[] = [
+  { label: "Muito baixa", value: "very_low" },
+  { label: "Baixa", value: "low" },
+  { label: "Normal", value: "normal" },
+  { label: "Alta", value: "high" },
+  { label: "Muito alta", value: "very_high" },
+];
+
+export const scheduleVariabilityOptions: OnboardingOption<ScheduleVariability>[] = [
+  { label: "Na maioria das semanas", value: "most_weeks" },
+  { label: "Às vezes", value: "sometimes" },
+  { label: "Raramente", value: "rarely" },
 ];
