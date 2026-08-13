@@ -1,56 +1,122 @@
-# Welcome to your Expo app 👋
+# fit-platform
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo mobile de acompanhamento de treino, nutrição, progresso e saúde. O produto organiza programas personalizados e registros do usuário sem se apresentar como um aplicativo de “treino gerado por IA”; recursos inteligentes devem funcionar nos bastidores.
 
-## Get started
+## Stack
 
-1. Install dependencies
+- Expo SDK 57
+- React Native
+- TypeScript
+- Expo Router
+- Supabase Auth e Database
 
-   ```bash
-   npm install
-   ```
+## Estrutura principal
 
-2. Start the app
+```text
+src/
+├── app/                  # Rotas e telas do Expo Router
+│   ├── (auth)/           # Cadastro e login
+│   ├── (onboarding)/     # Etapas do onboarding
+│   ├── _layout.tsx       # Stack principal
+│   └── index.tsx         # Boas-vindas
+├── components/ui/        # Componentes reutilizáveis de interface
+├── services/             # Clientes e integrações externas
+└── theme/                # Cores, espaçamentos e tipografia
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+assets/                   # Imagens e outros recursos estáticos
+docs/                     # Contexto e decisões permanentes do produto
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Instalação
 
-### Other setup steps
+```bash
+npm install
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Variáveis de ambiente
 
-## Learn more
+Crie `.env.local` no ambiente local com as variáveis abaixo, sem versionar valores reais:
 
-To learn more about developing your project with Expo, look at the following resources:
+```text
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_KEY=
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Nunca inclua segredos, senhas, tokens ou chaves privadas em documentação, commits ou logs.
 
-## Join the community
+## Execução
 
-Join our community of developers creating universal apps.
+Iniciar o Metro Bundler:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm start
+```
+
+Web:
+
+```bash
+npm run web
+```
+
+Android, com emulador configurado ou dispositivo disponível:
+
+```bash
+npm run android
+```
+
+O QR code exibido pelo Metro também pode ser usado com um ambiente mobile compatível.
+
+## Arquitetura
+
+O Expo Router usa `src/app` como raiz de rotas. Grupos entre parênteses organizam telas sem adicionar o nome do grupo à URL. Componentes compartilhados ficam em `src/components`, integrações em `src/services` e decisões visuais em `src/theme`.
+
+O Supabase fornece autenticação e persistência. O cliente utiliza somente variáveis públicas apropriadas ao aplicativo; regras de acesso permanecem protegidas por RLS no banco. Mudanças de schema devem ser propostas em SQL e executadas manualmente após autorização.
+
+As implementações devem preservar separação de responsabilidades, reutilizar componentes existentes e evitar duplicação ou abstrações prematuras.
+
+## Estado atual
+
+O projeto possui:
+
+- tela de boas-vindas;
+- cadastro com Supabase Auth e criação automática de perfil por trigger;
+- login de usuários existentes;
+- Etapa 1 do onboarding para dados pessoais;
+- Etapa 2 para seleção e persistência do objetivo principal;
+- feedback visual de loading, erros e sucesso nas operações implementadas.
+
+A próxima etapa do onboarding ainda não foi implementada. Depois de salvar o objetivo, o usuário permanece temporariamente na Etapa 2.
+
+## Fluxo atual
+
+```text
+Boas-vindas
+├── Cadastro → Supabase Auth → Onboarding
+└── Login → Supabase Auth → Onboarding
+
+Onboarding
+├── Etapa 1: Sobre você
+└── Etapa 2: Objetivo
+```
+
+## Validação
+
+```bash
+npx tsc --noEmit
+git diff --check
+```
+
+Execute testes ou builds adicionais quando o escopo da mudança exigir.
+
+## Git
+
+- Não faça commit ou push automaticamente.
+- Valide as alterações antes de criar um commit.
+- Use Conventional Commits quando o commit for autorizado.
+- Não versione `.env.local` nem qualquer credencial.
+- Não use operações destrutivas sem autorização explícita.
+
+## Documentação permanente
+
+- Consulte `AGENTS.md` para as regras obrigatórias de desenvolvimento e colaboração.
+- Consulte `docs/PROJECT_CONTEXT.md` antes de propor decisões de produto ou novas funcionalidades.
