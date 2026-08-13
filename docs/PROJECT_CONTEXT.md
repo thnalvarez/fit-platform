@@ -87,3 +87,19 @@ Esses recursos não fazem parte do primeiro desenvolvimento imediato do core.
 - Integração Health é opcional.
 - Um programa externo deve ser suportado futuramente.
 - IA não deve ser destacada na comunicação ao usuário.
+
+## Product Experience Philosophy
+
+- O produto deve atender do iniciante ao praticante avançado com a mesma base metodológica profissional.
+- A experiência usa progressive disclosure: iniciantes recebem perguntas simples e explicações claras; perguntas adicionais aparecem somente quando o perfil e as respostas tornam essa profundidade relevante.
+- A interface deve permanecer simples enquanto o motor trabalha com regras sofisticadas: **simple interface, sophisticated engine**.
+- Usuários Free recebem programas coerentes e tecnicamente respeitáveis. A qualidade metodológica do Free nunca deve ser reduzida deliberadamente para incentivar upgrade.
+- O Pro diferencia-se por maior profundidade de personalização, adaptações mais frequentes, análises avançadas, automação, gestão sofisticada de progressão e fadiga, histórico, tendências, integrações e conveniência.
+- O acompanhamento por profissional humano é uma modalidade própria, não apenas uma versão superior do plano Pro.
+- A interface não deve exigir conhecimento técnico de treinamento quando a mesma informação puder ser obtida com linguagem simples ou derivada pelo sistema.
+
+## Dados sensíveis de saúde
+
+- Respostas sobre dor, lesões, limitações, sinais de atenção e gestação devem ser usadas somente para segurança e personalização do programa.
+- Esses dados não devem ser enviados para analytics, incluídos em logs ou exibidos fora das áreas em que forem necessários.
+- A triagem não realiza diagnóstico, não substitui avaliação profissional e não deve afirmar aptidão clínica para exercício.

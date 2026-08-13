@@ -16,22 +16,28 @@ import {
 } from "react-native";
 
 import { Button } from "../../components/ui/Button";
+import { BiologicalSex } from "../../features/onboarding/types";
 import { supabase } from "../../services/supabase";
 import { colors, spacing, typography } from "../../theme";
 
-type Sex = "male" | "female" | null;
+const MINIMUM_AGE = 13;
+const MAXIMUM_AGE = 100;
+const MINIMUM_HEIGHT_CM = 120;
+const MAXIMUM_HEIGHT_CM = 230;
+const MINIMUM_WEIGHT_KG = 30;
+const MAXIMUM_WEIGHT_KG = 300;
 
 export default function Onboarding() {
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [webBirthDate, setWebBirthDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const [sex, setSex] = useState<Sex>(null);
+  const [sex, setSex] = useState<BiologicalSex | null>(null);
 
-  const [heightMeters, setHeightMeters] = useState(1);
-  const [heightCentimeters, setHeightCentimeters] = useState(70);
+  const [heightMeters, setHeightMeters] = useState<number | null>(null);
+  const [heightCentimeters, setHeightCentimeters] = useState<number | null>(null);
 
-  const [weightKg, setWeightKg] = useState(70);
+  const [weightKg, setWeightKg] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -118,6 +124,8 @@ export default function Onboarding() {
   }
 
   async function handleContinue() {
+    if (loading) return;
+
     setErrorMessage(null);
 
     const finalBirthDate =
@@ -135,12 +143,53 @@ export default function Onboarding() {
       return;
     }
 
+    const minimumBirthDate = new Date(
+      today.getFullYear() - MINIMUM_AGE,
+      today.getMonth(),
+      today.getDate(),
+    );
+    const maximumBirthDate = new Date(
+      today.getFullYear() - MAXIMUM_AGE - 1,
+      today.getMonth(),
+      today.getDate() + 1,
+    );
+
+    if (finalBirthDate > minimumBirthDate || finalBirthDate < maximumBirthDate) {
+      setErrorMessage(
+        `A idade informada deve estar entre ${MINIMUM_AGE} e ${MAXIMUM_AGE} anos.`,
+      );
+      return;
+    }
+
     if (!sex) {
-      setErrorMessage("Selecione masculino ou feminino.");
+      setErrorMessage("Selecione uma opção para sexo biológico.");
+      return;
+    }
+
+    if (heightMeters === null || heightCentimeters === null) {
+      setErrorMessage("Confirme sua altura antes de continuar.");
       return;
     }
 
     const heightCm = heightMeters * 100 + heightCentimeters;
+
+    if (heightCm < MINIMUM_HEIGHT_CM || heightCm > MAXIMUM_HEIGHT_CM) {
+      setErrorMessage(
+        `Informe uma altura entre ${MINIMUM_HEIGHT_CM} e ${MAXIMUM_HEIGHT_CM} cm.`,
+      );
+      return;
+    }
+
+    if (
+      weightKg === null ||
+      weightKg < MINIMUM_WEIGHT_KG ||
+      weightKg > MAXIMUM_WEIGHT_KG
+    ) {
+      setErrorMessage(
+        `Informe um peso entre ${MINIMUM_WEIGHT_KG} e ${MAXIMUM_WEIGHT_KG} kg.`,
+      );
+      return;
+    }
 
     try {
       setLoading(true);
@@ -151,50 +200,49 @@ export default function Onboarding() {
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        console.error("USER ERROR:", userError);
-
+        console.error("[PROFILE] Failed to get authenticated user", userError);
         setErrorMessage(
-          userError?.message ?? "Não foi possível identificar sua conta.",
+          "Não foi possível identificar sua conta. Entre novamente e tente de novo.",
         );
 
         return;
       }
 
-      console.log("Updating profile:", user.id);
+      const profileValues: Record<string, unknown> = {
+        birth_date: formatDateForDatabase(finalBirthDate),
+        sex,
+        height_cm: heightCm,
+        weight_kg: weightKg,
+        updated_at: new Date().toISOString(),
+      };
 
       const { data, error } = await supabase
         .from("profiles")
-        .update({
-          birth_date: formatDateForDatabase(finalBirthDate),
-          sex,
-          height_cm: heightCm,
-          weight_kg: weightKg,
-          updated_at: new Date().toISOString(),
-        })
+        .update(profileValues)
         .eq("id", user.id)
         .select("id");
 
       if (error) {
-        console.error("SUPABASE UPDATE ERROR:", error);
-        setErrorMessage(error.message);
+        console.error("[PROFILE] Profile update failed", error);
+        setErrorMessage("Não foi possível salvar seus dados. Tente novamente.");
         return;
       }
 
       if (!data || data.length === 0) {
-        console.error("PROFILE UPDATE RETURNED NO ROWS");
+        console.error("[PROFILE] Profile update returned no rows", {
+          userId: user.id,
+        });
 
         setErrorMessage(
-          "Seu perfil não pôde ser atualizado. Verifique a configuração do banco.",
+          "Seu perfil não pôde ser encontrado ou atualizado.",
         );
 
         return;
       }
 
-      console.log("Profile updated successfully:", data);
-
       router.push("/goal");
     } catch (error) {
-      console.error("UNEXPECTED ERROR:", error);
+      console.error("[PROFILE] Unexpected error while saving", error);
 
       setErrorMessage("Ocorreu um erro inesperado ao salvar seus dados.");
     } finally {
@@ -210,7 +258,7 @@ export default function Onboarding() {
         keyboardShouldPersistTaps="handled"
       >
         <View>
-          <Text style={styles.step}>ETAPA 1 DE 4</Text>
+          <Text style={styles.step}>ETAPA 1 DE 12</Text>
 
           <Text style={styles.title}>Sobre você</Text>
 
@@ -256,10 +304,16 @@ export default function Onboarding() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Sexo</Text>
+          <Text style={styles.label}>Sexo biológico</Text>
+          <Text style={styles.helper}>
+            Usado apenas quando necessário para cálculos fisiológicos e
+            nutricionais. Não define seu tipo de treino.
+          </Text>
 
           <View style={styles.sexRow}>
             <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: sex === "male" }}
               style={[styles.option, sex === "male" && styles.optionSelected]}
               onPress={() => setSex("male")}
             >
@@ -274,6 +328,8 @@ export default function Onboarding() {
             </Pressable>
 
             <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: sex === "female" }}
               style={[styles.option, sex === "female" && styles.optionSelected]}
               onPress={() => setSex("female")}
             >
@@ -284,6 +340,25 @@ export default function Onboarding() {
                 ]}
               >
                 Feminino
+              </Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: sex === "prefer_not_to_say" }}
+              style={[
+                styles.option,
+                sex === "prefer_not_to_say" && styles.optionSelected,
+              ]}
+              onPress={() => setSex("prefer_not_to_say")}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  sex === "prefer_not_to_say" && styles.optionTextSelected,
+                ]}
+              >
+                Prefiro não informar
               </Text>
             </Pressable>
           </View>
@@ -299,6 +374,7 @@ export default function Onboarding() {
                 onValueChange={(value) => setHeightMeters(Number(value))}
                 style={styles.picker}
               >
+                <Picker.Item label="Metros" value={null} />
                 <Picker.Item label="1 m" value={1} />
 
                 <Picker.Item label="2 m" value={2} />
@@ -311,6 +387,7 @@ export default function Onboarding() {
                 onValueChange={(value) => setHeightCentimeters(Number(value))}
                 style={styles.picker}
               >
+                <Picker.Item label="Centímetros" value={null} />
                 {Array.from({ length: 100 }, (_, value) => (
                   <Picker.Item
                     key={value}
@@ -323,7 +400,9 @@ export default function Onboarding() {
           </View>
 
           <Text style={styles.measurementPreview}>
-            {heightMeters} m {heightCentimeters} cm
+            {heightMeters !== null && heightCentimeters !== null
+              ? `${heightMeters} m ${heightCentimeters} cm`
+              : "Selecione metros e centímetros"}
           </Text>
         </View>
 
@@ -336,7 +415,8 @@ export default function Onboarding() {
               onValueChange={(value) => setWeightKg(Number(value))}
               style={styles.picker}
             >
-              {Array.from({ length: 221 }, (_, index) => {
+              <Picker.Item label="Selecionar peso" value={null} />
+              {Array.from({ length: 271 }, (_, index) => {
                 const value = index + 30;
 
                 return (
@@ -350,7 +430,9 @@ export default function Onboarding() {
             </Picker>
           </View>
 
-          <Text style={styles.measurementPreview}>{weightKg} kg</Text>
+          <Text style={styles.measurementPreview}>
+            {weightKg !== null ? `${weightKg} kg` : "Selecione seu peso"}
+          </Text>
         </View>
 
         {errorMessage ? (
@@ -431,12 +513,11 @@ const styles = StyleSheet.create({
   },
 
   sexRow: {
-    flexDirection: "row",
+    flexDirection: "column",
     gap: spacing.md,
   },
 
   option: {
-    flex: 1,
     minHeight: 56,
     alignItems: "center",
     justifyContent: "center",
@@ -486,6 +567,12 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.medium,
+  },
+
+  helper: {
+    color: colors.secondary,
+    fontSize: typography.fontSize.sm,
+    lineHeight: 20,
   },
 
   errorBox: {

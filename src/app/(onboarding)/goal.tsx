@@ -1,102 +1,61 @@
+import { router } from "expo-router";
 import { useState } from "react";
-import {
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { OnboardingHeader } from "../../components/onboarding/OnboardingHeader";
+import { SelectableCard } from "../../components/onboarding/SelectableCard";
+import { StatusMessage } from "../../components/onboarding/StatusMessage";
 import { Button } from "../../components/ui/Button";
-import { supabase } from "../../services/supabase";
+import {
+  primaryGoalOptions,
+  secondaryGoalNoneOption,
+} from "../../features/onboarding/options";
+import { saveGoals } from "../../features/onboarding/persistence";
+import { PrimaryGoal, SecondaryGoal } from "../../features/onboarding/types";
 import { colors, spacing, typography } from "../../theme";
 
-type Goal =
-  | "fat_loss"
-  | "muscle_gain"
-  | "body_recomposition"
-  | "strength"
-  | "conditioning"
-  | "health";
-
-const goals: { label: string; value: Goal }[] = [
-  { label: "Perder gordura", value: "fat_loss" },
-  { label: "Ganhar massa muscular", value: "muscle_gain" },
-  { label: "Recomposição corporal", value: "body_recomposition" },
-  { label: "Ganhar força", value: "strength" },
-  { label: "Melhorar condicionamento", value: "conditioning" },
-  { label: "Saúde e qualidade de vida", value: "health" },
-];
-
 export default function GoalScreen() {
-  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [primaryGoal, setPrimaryGoal] = useState<PrimaryGoal | null>(null);
+  const [secondaryGoal, setSecondaryGoal] = useState<SecondaryGoal | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  function handleSelect(goal: Goal) {
-    setSelectedGoal(goal);
+  const secondaryGoalOptions = [
+    secondaryGoalNoneOption,
+    ...primaryGoalOptions.filter(({ value }) => value !== primaryGoal),
+  ];
+
+  function handlePrimaryGoal(value: PrimaryGoal) {
+    setPrimaryGoal(value);
+    setSecondaryGoal((current) => (current === value ? null : current));
     setErrorMessage(null);
-    setSuccessMessage(null);
   }
 
   async function handleContinue() {
-    if (loading) {
+    if (loading) return;
+
+    setErrorMessage(null);
+
+    if (!primaryGoal) {
+      setErrorMessage("Selecione seu principal objetivo.");
       return;
     }
 
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    if (!selectedGoal) {
-      setErrorMessage("Selecione seu principal objetivo.");
+    if (secondaryGoal === primaryGoal) {
+      setErrorMessage("O objetivo secundário deve ser diferente do principal.");
       return;
     }
 
     try {
       setLoading(true);
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        console.error("[GOAL] Failed to get authenticated user", userError);
-        setErrorMessage(
-          userError?.message ?? "Não foi possível identificar sua conta.",
-        );
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ primary_goal: selectedGoal })
-        .eq("id", user.id)
-        .select("id");
-
-      if (error) {
-        console.error("[GOAL] Failed to update primary goal", error);
-        setErrorMessage(error.message);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        console.error("[GOAL] Profile update returned no rows", {
-          userId: user.id,
-        });
-        setErrorMessage(
-          "Seu perfil não pôde ser encontrado ou atualizado.",
-        );
-        return;
-      }
-
-      console.log("[GOAL] Primary goal saved", {
-        profileId: data[0].id,
-        primaryGoal: selectedGoal,
+      await saveGoals(primaryGoal, secondaryGoal);
+      router.push({
+        pathname: "/(onboarding)/routine",
+        params: {
+          primaryGoal,
+          secondaryGoal: secondaryGoal ?? "",
+        },
       });
-      setSuccessMessage("Objetivo salvo com sucesso.");
     } catch (error) {
       console.error("[GOAL] Unexpected error while saving", error);
       setErrorMessage(
@@ -111,72 +70,48 @@ export default function GoalScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View>
-          <Text style={styles.step}>ETAPA 2 DE 4</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <OnboardingHeader
+          step={2}
+          title="Seu objetivo"
+          description="Qual é o seu principal objetivo neste momento?"
+        />
 
-          <Text style={styles.title}>Seu objetivo</Text>
-
-          <Text style={styles.description}>
-            Qual é o seu principal objetivo neste momento?
-          </Text>
+        <View style={styles.cardList}>
+          {primaryGoalOptions.map((option) => (
+            <SelectableCard
+              key={option.value}
+              label={option.label}
+              selected={primaryGoal === option.value}
+              disabled={loading}
+              onPress={() => handlePrimaryGoal(option.value)}
+            />
+          ))}
         </View>
 
-        <View style={styles.options}>
-          {goals.map((goal) => {
-            const isSelected = selectedGoal === goal.value;
-
-            return (
-              <Pressable
-                key={goal.value}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: isSelected }}
-                disabled={loading}
-                onPress={() => handleSelect(goal.value)}
-                style={({ pressed }) => [
-                  styles.option,
-                  isSelected && styles.optionSelected,
-                  pressed && styles.optionPressed,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.selectionIndicator,
-                    isSelected && styles.selectionIndicatorSelected,
-                  ]}
+        {primaryGoal ? (
+          <View style={styles.section}>
+            <Text style={styles.label}>Existe algum objetivo secundário?</Text>
+            <Text style={styles.helper}>Opcional. Você pode escolher no máximo um.</Text>
+            <View style={styles.cardList}>
+              {secondaryGoalOptions.map((option) => (
+                <SelectableCard
+                  key={option.value}
+                  label={option.label}
+                  selected={secondaryGoal === option.value}
+                  disabled={loading}
+                  onPress={() => setSecondaryGoal(option.value)}
                 />
-
-                <Text
-                  style={[
-                    styles.optionText,
-                    isSelected && styles.optionTextSelected,
-                  ]}
-                >
-                  {goal.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {errorMessage ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{errorMessage}</Text>
+              ))}
+            </View>
           </View>
         ) : null}
 
-        {successMessage ? (
-          <View style={styles.successBox}>
-            <Text style={styles.successText}>{successMessage}</Text>
-          </View>
-        ) : null}
+        {errorMessage ? <StatusMessage message={errorMessage} /> : null}
 
         <Button
           title="Continuar"
-          disabled={!selectedGoal}
+          disabled={!primaryGoal}
           loading={loading}
           onPress={handleContinue}
         />
@@ -186,115 +121,22 @@ export default function GoalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
+  container: { flex: 1, backgroundColor: colors.background },
   content: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xl,
     gap: spacing.xl,
   },
-
-  step: {
+  section: { gap: spacing.md },
+  cardList: { gap: spacing.md },
+  label: {
+    color: colors.primary,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  helper: {
     color: colors.secondary,
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semibold,
-    letterSpacing: 2,
-    marginBottom: spacing.md,
-  },
-
-  title: {
-    color: colors.primary,
-    fontSize: typography.fontSize.xxl,
-    fontWeight: typography.fontWeight.bold,
-  },
-
-  description: {
-    color: colors.secondary,
-    fontSize: typography.fontSize.md,
-    lineHeight: 24,
-    marginTop: spacing.md,
-  },
-
-  options: {
-    gap: spacing.md,
-  },
-
-  option: {
-    minHeight: 72,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-
-  optionSelected: {
-    borderColor: colors.accent,
-    backgroundColor: colors.surfaceSecondary,
-  },
-
-  optionPressed: {
-    opacity: 0.8,
-  },
-
-  selectionIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.secondary,
-  },
-
-  selectionIndicatorSelected: {
-    borderWidth: 6,
-    borderColor: colors.accent,
-    backgroundColor: colors.primary,
-  },
-
-  optionText: {
-    flex: 1,
-    color: colors.secondary,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.medium,
-  },
-
-  optionTextSelected: {
-    color: colors.primary,
-    fontWeight: typography.fontWeight.semibold,
-  },
-
-  errorBox: {
-    padding: spacing.md,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.danger,
-    backgroundColor: colors.surface,
-  },
-
-  errorText: {
-    color: colors.danger,
-    fontSize: typography.fontSize.md,
-    lineHeight: 22,
-  },
-
-  successBox: {
-    padding: spacing.md,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.success,
-    backgroundColor: colors.surface,
-  },
-
-  successText: {
-    color: colors.success,
-    fontSize: typography.fontSize.md,
-    lineHeight: 22,
+    lineHeight: 20,
   },
 });
